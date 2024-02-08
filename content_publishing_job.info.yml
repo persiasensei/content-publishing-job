@@ -1,0 +1,9 @@
+name: 'Content Publishing Job'
+type: module
+description: 'An module to help to unpublish contents using jobs'
+package: 'Content Publishing'
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:block
+'interface translation project': content_publishing_job
+'interface translation server pattern': modules/custom/%project/translations/%project.%language.po

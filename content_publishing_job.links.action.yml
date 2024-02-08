@@ -1,0 +1,5 @@
+entity.publishing_config.add_form:
+  title: 'Add a content publishing configuration'
+  route_name: entity.publishing_config.add_form
+  appears_on:
+    - entity.publishing_config.collection

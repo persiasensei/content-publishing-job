@@ -1,0 +1,12 @@
+# French translation of Corporate events
+#
+msgid ""
+msgstr ""
+msgid "Related events block"
+msgstr "Bloc d'événements liés"
+msgid "About"
+msgstr "A propos"
+msgid "This module gives the user the ability to view events related to the event displayed by default"
+msgstr "Ce module donne à l'utilisateur la possibilité de visualiser les événements liés à l'événement affiché par défaut"
+msgid "Display other events in event details page"
+msgstr "Affiche d'autres événements dans la page de détails de l'événement"

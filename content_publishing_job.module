@@ -1,0 +1,49 @@
+<?php
+
+use Drupal\content_publishing_job\Entity\PublishingConfig;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function content_publishing_job_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.content_publishing_job':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('This module gives the user the ability to view contents related to the content displayed by default') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * @see \Drupal\content_publishing_job\Plugin\QueueWorker\UnPublishExpiredContents
+ */
+function content_publishing_job_cron() {
+  /** @var \Drupal\content_publishing_job\Manager\ContentManagerInterface $content_manager */
+  $content_manager = \Drupal::service('content_publishing_job.content_manager');
+  $queue_worker = \Drupal::queue('unpublish_expired_contents');
+  /** @var \Drupal\Core\Entity\EntityFieldManager $entityFieldManager */
+  $entityFieldManager = \Drupal::service('entity_field.manager');
+
+  $publishingConfigs = PublishingConfig::loadMultiple();
+  foreach ($publishingConfigs as $publishingConfig) {
+    $nids = [];
+    try {
+      // Get contents that will be unpublished by the queue worker.
+      $nids = $content_manager->getExpiredContents($publishingConfig->get('content_type'), $publishingConfig->get('date_field'));
+    }
+    catch (\Exception $e) {
+      \Drupal::logger('content_publishing_job')
+        ->error('An exception occurred: @error', [
+          '@error' => $e->getMessage(),
+        ]);
+    }
+
+    foreach ($nids as $nid) {
+      $queue_worker->createItem(['nid' => $nid]);
+    }
+  }
+}

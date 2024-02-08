@@ -1,0 +1,4 @@
+services:
+  content_publishing_job.content_manager:
+    class: Drupal\content_publishing_job\Manager\ContentManager
+    arguments: ['@entity_type.manager']
