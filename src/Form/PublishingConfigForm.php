@@ -2,9 +2,8 @@
 
 namespace Drupal\content_publishing_job\Form;
 
-use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\content_publishing_job\Manager\DateFieldHandlerInterface;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -14,30 +13,20 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PublishingConfigForm extends EntityForm {
 
   /**
-   * An entity type manager object.
+   * The date field handler manager.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @var \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface
    */
-  protected $entityTypeManager;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManager
-   */
-  protected $entityFieldManager;
+  protected DateFieldHandlerInterface $dateFieldHandler;
 
   /**
    * Constructs an PublishingConfigForm object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity Type Manage object.
-   * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
-   *   The entity field manager object.
+   * @param \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface $date_field_handler
+   *   The date field handler object.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
+  public function __construct(DateFieldHandlerInterface $date_field_handler) {
+    $this->dateFieldHandler = $date_field_handler;
   }
 
   /**
@@ -45,8 +34,7 @@ class PublishingConfigForm extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
+      $container->get('content_publishing_job.date_field_handler'),
     );
   }
 
@@ -75,29 +63,34 @@ class PublishingConfigForm extends EntityForm {
       return $node_type->label();
     }, $node_types);
 
+    $content_type = $publishingConfig->get('content_type') ?: $form_state->getValue('content_type');
     $form['content_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Content Type'),
       '#description' => $this->t('Select the name of the content type in The list.'),
       '#required' => TRUE,
-      '#default_value' => $publishingConfig->get('content_type'),
+      '#default_value' => $content_type,
       '#options' => $content_types,
+      '#ajax' => [
+        'callback' => [$this, 'dateFieldAjaxCallback'],
+        'disable-refocus' => FALSE,
+        'event' => 'change',
+        'wrapper' => 'date-field-wrapper',
+        'progress' => [
+          'type' => 'throbber',
+        ],
+      ],
     ];
 
-    $bundle_fields = $this->entityFieldManager->getFieldDefinitions('node', $publishingConfig->get('content_type'));
-    $bundle_field_names = [];
-    foreach ($bundle_fields as $field_name => $field_definition) {
-      if (!empty($field_definition->getTargetBundle())) {
-        $bundle_field_names[$field_name] = $field_definition->getLabel();
-      }
-    }
-
+    $bundle_field_names = $this->dateFieldHandler->resolveDateFieldNamesByContentType($content_type);
     $form['date_field'] = [
       '#type' => 'select',
       '#title' => $this->t('Date Field Name'),
       '#description' => $this->t('The date field name to evaluate the validity of the content.'),
       '#default_value' => $publishingConfig->get('date_field'),
       '#options' => $bundle_field_names,
+      '#prefix' => '<div id="date-field-wrapper">',
+      '#suffix' => '</div>',
     ];
 
     $form['id'] = [
@@ -111,6 +104,21 @@ class PublishingConfigForm extends EntityForm {
 
     // You will need additional form elements for your custom properties.
     return $form;
+  }
+
+  /**
+   * Ajax callback to render date field in the form.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return array
+   *   The output of the field.
+   */
+  public function dateFieldAjaxCallback(array &$form, FormStateInterface $form_state) {
+    return $form['date_field'];
   }
 
   /**

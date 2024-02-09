@@ -26,7 +26,7 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  private EntityTypeManagerInterface $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The logger channel factory object.

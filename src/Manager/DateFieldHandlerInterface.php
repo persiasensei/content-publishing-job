@@ -12,6 +12,7 @@ interface DateFieldHandlerInterface {
   const DATETIME = 'datetime';
   const DATERANGE = 'daterange';
   const TIMESTAMP = 'timestamp';
+  const DATE_TYPES_LIST = [self::DATETIME, self::DATERANGE, self::TIMESTAMP];
 
   /**
    * The name of the field to use in the query.
@@ -25,6 +26,17 @@ interface DateFieldHandlerInterface {
    *   Return the name of the field to use in the query.
    */
   public function resolveQueryFieldName(string $field_name, ?string $date_field_type): string;
+
+  /**
+   * Get list of the date field name for a content type.
+   *
+   * @param string|null $content_type
+   *   The name of the content type.
+   *
+   * @return array
+   *   Return the list of the date field name for a content type.
+   */
+  public function resolveDateFieldNamesByContentType(?string $content_type): array;
 
   /**
    * The name of the field to use in the query.

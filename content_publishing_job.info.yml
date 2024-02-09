@@ -2,6 +2,7 @@ name: 'Content Publishing Job'
 type: module
 description: 'An module to help to unpublish contents using jobs'
 package: 'Content Publishing'
+configure: entity.publishing_config.collection
 core_version_requirement: ^9 || ^10
 dependencies:
   - drupal:block

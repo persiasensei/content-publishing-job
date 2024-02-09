@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityViewBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -45,9 +46,9 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
   /**
    * The current node.
    *
-   * @var \Drupal\node\NodeInterface
+   * @var \Drupal\node\NodeInterface|null
    */
-  protected NodeInterface $node;
+  protected ?NodeInterface $node;
 
   /**
    * The entity view builder interface.
@@ -190,6 +191,8 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
    * {@inheritdoc}
    */
   public function blockForm($form, FormStateInterface $form_state) {
+    $form = parent::blockForm($form, $form_state);
+
     $node_types = $this->entityTypeManager
       ->getStorage('node_type')
       ->loadMultiple();
@@ -198,22 +201,27 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
       return $node_type->label();
     }, $node_types);
 
+    $complete_form_state = $form_state instanceof SubformStateInterface ? $form_state->getCompleteFormState() : $form_state;
+    $content_type = $this->configuration['content_type'] ?: $complete_form_state->getValue('content_type');
+
     $form['content_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Content Types'),
       '#description' => $this->t('Select the name of the content type in the list.'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration['content_type'],
+      '#default_value' => $content_type,
       '#options' => $content_types,
+      '#ajax' => [
+        'callback' => [$this, 'relationshipFieldAjaxCallback'],
+        'disable-refocus' => FALSE,
+        'event' => 'change',
+        'wrapper' => 'relationship-field-wrapper',
+        'progress' => [
+          'type' => 'throbber',
+        ],
+      ],
     ];
-
-    $bundle_fields = $this->entityFieldManager->getFieldDefinitions('node', $this->configuration['content_type']);
-    $bundle_field_names = [];
-    foreach ($bundle_fields as $field_name => $field_definition) {
-      if (!empty($field_definition->getTargetBundle())) {
-        $bundle_field_names[$field_name] = $field_definition->getLabel();
-      }
-    }
+    $bundle_field_names = $this->getBundleFieldNamesList($content_type);
 
     $form['relationship_field'] = [
       '#type' => 'select',
@@ -221,6 +229,9 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
       '#description' => $this->t('The relationship field name to bind related contents.'),
       '#default_value' => $this->configuration['relationship_field'],
       '#options' => $bundle_field_names,
+      '#validated' => TRUE,
+      '#prefix' => '<div id="relationship-field-wrapper">',
+      '#suffix' => '</div>',
     ];
 
     $form['max_number'] = [
@@ -239,6 +250,24 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
   }
 
   /**
+   * Ajax callback to render relationship fields list in the form.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return array
+   *   The output of the field.
+   */
+  public function relationshipFieldAjaxCallback(array &$form, FormStateInterface $form_state) {
+    $bundle_field_names = $this->getBundleFieldNamesList($form_state->getValue('settings')['content_type']);
+    $form['settings']['relationship_field']['#options'] = $bundle_field_names;
+
+    return $form['settings']['relationship_field'];
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
@@ -246,6 +275,28 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
     $this->configuration['content_type'] = $values['content_type'];
     $this->configuration['relationship_field'] = $values['relationship_field'];
     $this->configuration['max_number'] = $values['max_number'];
+  }
+
+  /**
+   * Get the list of entity reference fields for content type.
+   *
+   * @param string|null $content_type
+   *   The content type of the node.
+   *
+   * @return array
+   *   Return a list of field names.
+   */
+  private function getBundleFieldNamesList(?string $content_type) :array {
+    $bundle_fields = $this->entityFieldManager->getFieldDefinitions('node', $content_type);
+    $bundle_field_names = [];
+    foreach ($bundle_fields as $field_name => $field_definition) {
+      // Only accepts entity reference fields.
+      if (!empty($field_definition->getTargetBundle()) && $field_definition->getType() === 'entity_reference') {
+        $bundle_field_names[$field_name] = $field_definition->getLabel();
+      }
+    }
+
+    return $bundle_field_names;
   }
 
   /**
