@@ -1,6 +1,5 @@
 <?php
 
-use Drupal\content_publishing_job\Entity\PublishingConfig;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
@@ -25,10 +24,9 @@ function content_publishing_job_cron() {
   /** @var \Drupal\content_publishing_job\Manager\ContentManagerInterface $content_manager */
   $content_manager = \Drupal::service('content_publishing_job.content_manager');
   $queue_worker = \Drupal::queue('unpublish_expired_contents');
-  /** @var \Drupal\Core\Entity\EntityFieldManager $entityFieldManager */
-  $entityFieldManager = \Drupal::service('entity_field.manager');
 
-  $publishingConfigs = PublishingConfig::loadMultiple();
+  /** @var \Drupal\content_publishing_job\Entity\PublishingConfig[] $publishingConfigs */
+  $publishingConfigs = \Drupal::service('content_publishing_job.job_manager')->loadPublishingConfigJobs();
   foreach ($publishingConfigs as $publishingConfig) {
     $nids = [];
     try {
@@ -43,7 +41,11 @@ function content_publishing_job_cron() {
     }
 
     foreach ($nids as $nid) {
-      $queue_worker->createItem(['nid' => $nid]);
+      $queue_worker->createItem([
+        'nid' => $nid,
+        'date_field' => $publishingConfig->get('date_field'),
+      ]);
     }
   }
+
 }

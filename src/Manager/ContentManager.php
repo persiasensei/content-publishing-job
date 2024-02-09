@@ -2,9 +2,7 @@
 
 namespace Drupal\content_publishing_job\Manager;
 
-use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 
@@ -14,20 +12,31 @@ use Drupal\taxonomy\TermInterface;
 class ContentManager implements ContentManagerInterface {
 
   /**
-   * An entity type manager object.
+   * The entity type manager object.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
+
   private EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * The date field handler object.
+   *
+   * @var \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface
+   */
+  private DateFieldHandlerInterface $dateFieldHandler;
 
   /**
    * Constructs an event manager object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager object.
+   * @param \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface $date_field_handler
+   *   The date field handler object.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, DateFieldHandlerInterface $date_field_handler) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->dateFieldHandler = $date_field_handler;
   }
 
   /**
@@ -58,28 +67,35 @@ class ContentManager implements ContentManagerInterface {
    */
   public function getExpiredContents(string $content_type, string $date_field): array|int {
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
-    $date = $this->getCurrentDateTime();
+    $date = $this->dateFieldHandler->getCurrentDateTime();
+
+    $date_field_type = $this->loadFieldStorageTypeByName($date_field);
+    $query_date_field_name = $this->dateFieldHandler->resolveQueryFieldName($date_field, $date_field_type);
 
     $query
       ->accessCheck()
       ->condition('type', $content_type)
       ->condition('status', NodeInterface::PUBLISHED)
-      ->condition($date_field, $date, '<');
+      ->condition($query_date_field_name, $date, '<');
 
     return $query->execute();
   }
 
   /**
-   * Get the current date and time formatted as a string.
+   * The type of the date field.
    *
-   * @return string
-   *   Return the value of the current date time in string.
+   * @param string $field_name
+   *
+   * @return string|null
+   *   Return the type of the date field.
    */
-  private function getCurrentDateTime(): string {
-    $date = new DrupalDateTime();
-    $date->setTimezone(new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
+  private function loadFieldStorageTypeByName(string $field_name): ?string {
+    /** @var \Drupal\field\FieldStorageConfigInterface $field */
+    $field = $this->entityTypeManager
+      ->getStorage('field_storage_config')
+      ->load('node.' . $field_name);
 
-    return $date->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
+    return $field?->getType();
   }
 
 }

@@ -1,4 +1,9 @@
 services:
+  content_publishing_job.date_field_handler:
+    class: Drupal\content_publishing_job\Manager\DateFieldHandler
   content_publishing_job.content_manager:
     class: Drupal\content_publishing_job\Manager\ContentManager
+    arguments: ['@entity_type.manager', '@content_publishing_job.date_field_handler']
+  content_publishing_job.job_manager:
+    class: Drupal\content_publishing_job\Manager\JobManager
     arguments: ['@entity_type.manager']

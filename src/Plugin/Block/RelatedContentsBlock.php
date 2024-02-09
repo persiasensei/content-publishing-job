@@ -2,13 +2,13 @@
 
 namespace Drupal\content_publishing_job\Plugin\Block;
 
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\content_publishing_job\Manager\ContentManagerInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -83,7 +83,7 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager object.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
-   *    The entity field manager.
+   *   The entity field manager object.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_channel_factory
    *   The logger channel factory object.
    * @param \Drupal\content_publishing_job\Manager\ContentManagerInterface $content_manager
@@ -154,7 +154,7 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
    */
   public function getCacheTags() {
     // With this when the current node change your block will rebuild.
-    $default_cache_tags = Cache::mergeTags(parent::getCacheTags(), ['node_list:'.$this->configuration['content_type']]);
+    $default_cache_tags = Cache::mergeTags(parent::getCacheTags(), ['node_list:' . $this->configuration['content_type']]);
     if (!empty($this->node)) {
       // If there is node add its cache tag.
       return Cache::mergeTags($default_cache_tags, $this->node->getCacheTags());
@@ -177,8 +177,7 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration(): array
-  {
+  public function defaultConfiguration(): array {
     return [
       'content_type' => '',
       'relationship_field' => '',

@@ -2,12 +2,11 @@
 
 namespace Drupal\content_publishing_job\Plugin\QueueWorker;
 
-use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\content_publishing_job\Manager\DateFieldHandlerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -23,18 +22,25 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFactoryPluginInterface {
 
   /**
-   * Drupal\Core\Entity\EntityTypeManagerInterface definition.
+   * The entity type manager object.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   private $entityTypeManager;
 
   /**
-   * Drupal\Core\Logger\LoggerChannelFactoryInterface definition.
+   * The logger channel factory object.
    *
    * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
    */
   protected $loggerChannelFactory;
+
+  /**
+   * The date field handler object.
+   *
+   * @var \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface
+   */
+  protected $dateFieldHandler;
 
   /**
    * Constructs a UnPublishExpiredContents object.
@@ -49,15 +55,19 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
    *   The entity type manager object.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_channel_factory
    *   The logger channel factory object.
+   * @param \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface $date_field_handler
+   *    The date field handler object.
    */
   public function __construct(array $configuration,
     $plugin_id,
     $plugin_definition,
     EntityTypeManagerInterface $entity_type_manager,
-    LoggerChannelFactoryInterface $logger_channel_factory) {
+    LoggerChannelFactoryInterface $logger_channel_factory,
+    DateFieldHandlerInterface $date_field_handler) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
     $this->loggerChannelFactory = $logger_channel_factory;
+    $this->dateFieldHandler = $date_field_handler;
   }
 
   /**
@@ -69,7 +79,8 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('content_publishing_job.date_field_handler')
     );
   }
 
@@ -78,12 +89,12 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
    */
   public function processItem($data) {
     // Load the content node by its ID.
-    if (!empty($data['nid'])) {
+    if (!empty($data['nid']) && !empty($data['date_field'])) {
       try {
         $node = $this->entityTypeManager->getStorage('node')->load($data['nid']);
 
         // Check if the node exists and if its end date has passed.
-        if ($node instanceof NodeInterface && $this->isContentDateExpired($node)) {
+        if ($node instanceof NodeInterface && $this->isContentDateExpired($node, $data['date_field'])) {
           // Set the status of the content to unpublished.
           $node->setUnpublished();
           $node->save();
@@ -117,13 +128,9 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
    * @return bool
    *   TRUE if the start date has passed, FALSE otherwise.
    */
-  private function isContentDateExpired(NodeInterface $content) :bool {
-    // Sample code to compare the date with the current date:
-    $end_date = $content->hasField('field_date_range') ? $content->get('field_date_range')->end_value : NULL;
-    $current_date = new DrupalDateTime();
-    $current_date->setTimezone(new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
-
-    return $end_date && $end_date < $current_date->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
+  private function isContentDateExpired(NodeInterface $content, string $field_name) :bool {
+    $content_date = $this->dateFieldHandler->getDateValue($content, $field_name);
+    return $content_date && $content_date < $this->dateFieldHandler->getCurrentDateTime();
   }
 
 }
