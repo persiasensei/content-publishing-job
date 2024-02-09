@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * This is the module to create a queue worker then execute jobs.
+ */
+
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**

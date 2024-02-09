@@ -26,21 +26,21 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  private $entityTypeManager;
+  private EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The logger channel factory object.
    *
    * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
    */
-  protected $loggerChannelFactory;
+  protected LoggerChannelFactoryInterface $loggerChannelFactory;
 
   /**
    * The date field handler object.
    *
    * @var \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface
    */
-  protected $dateFieldHandler;
+  protected DateFieldHandlerInterface $dateFieldHandler;
 
   /**
    * Constructs a UnPublishExpiredContents object.
@@ -56,7 +56,7 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_channel_factory
    *   The logger channel factory object.
    * @param \Drupal\content_publishing_job\Manager\DateFieldHandlerInterface $date_field_handler
-   *    The date field handler object.
+   *   The date field handler object.
    */
   public function __construct(array $configuration,
     $plugin_id,
@@ -124,6 +124,8 @@ class UnPublishExpiredContents extends QueueWorkerBase implements ContainerFacto
    *
    * @param \Drupal\node\NodeInterface $content
    *   The content node.
+   * @param string $field_name
+   *   The name of the date field.
    *
    * @return bool
    *   TRUE if the start date has passed, FALSE otherwise.

@@ -9,8 +9,8 @@ use Drupal\node\NodeInterface;
 /**
  * Date Field Handler class.
  */
-class DateFieldHandler implements DateFieldHandlerInterface
-{
+class DateFieldHandler implements DateFieldHandlerInterface {
+
   /**
    * {@inheritdoc}
    */
@@ -18,6 +18,7 @@ class DateFieldHandler implements DateFieldHandlerInterface
     switch ($date_field_type) {
       case DateFieldHandlerInterface::DATERANGE:
         return $field_name . '.end_value';
+
       case DateFieldHandlerInterface::TIMESTAMP:
       case DateFieldHandlerInterface::DATETIME:
       default:
@@ -33,6 +34,7 @@ class DateFieldHandler implements DateFieldHandlerInterface
       switch ($field_definition->getType()) {
         case DateFieldHandlerInterface::DATERANGE:
           return $content->get($field_name)->end_value;
+
         case DateFieldHandlerInterface::TIMESTAMP:
         case DateFieldHandlerInterface::DATETIME:
         default:

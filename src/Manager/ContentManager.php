@@ -85,6 +85,7 @@ class ContentManager implements ContentManagerInterface {
    * The type of the date field.
    *
    * @param string $field_name
+   *   The name of field.
    *
    * @return string|null
    *   Return the type of the date field.

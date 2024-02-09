@@ -74,4 +74,5 @@ class PublishingConfig extends ConfigEntityBase implements PublishingConfigInter
    * @var string
    */
   protected $date_field;
+
 }

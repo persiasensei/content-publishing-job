@@ -8,6 +8,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityViewBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -32,42 +33,42 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The entity field manager.
    *
-   * @var \Drupal\Core\Entity\EntityFieldManager
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
-  protected $entityFieldManager;
+  protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
    * The current node.
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * The entity view builder interface.
    *
    * @var \Drupal\Core\Entity\EntityViewBuilderInterface
    */
-  protected $viewBuilder;
+  protected EntityViewBuilderInterface $viewBuilder;
 
   /**
    * Drupal\Core\Logger\LoggerChannelFactoryInterface definition.
    *
    * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
    */
-  protected $loggerChannelFactory;
+  protected LoggerChannelFactoryInterface $loggerChannelFactory;
 
   /**
    * The content manager interface.
    *
    * @var \Drupal\content_publishing_job\Manager\ContentManagerInterface
    */
-  protected $contentManager;
+  protected ContentManagerInterface $contentManager;
 
   /**
    * Constructs a RelatedContentsBlock object.
@@ -82,7 +83,7 @@ class RelatedContentsBlock extends BlockBase implements ContainerFactoryPluginIn
    *   The current route match.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager object.
-   * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager object.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_channel_factory
    *   The logger channel factory object.

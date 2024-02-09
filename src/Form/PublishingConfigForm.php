@@ -30,13 +30,13 @@ class PublishingConfigForm extends EntityForm {
   /**
    * Constructs an PublishingConfigForm object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entityTypeManager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity Type Manage object.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
-   *     The entity field manager.
+   *   The entity field manager object.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entity_field_manager) {
-    $this->entityTypeManager = $entityTypeManager;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager) {
+    $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
   }
 
@@ -135,9 +135,15 @@ class PublishingConfigForm extends EntityForm {
   }
 
   /**
-   * Helper function to check whether a PublishingConfig configuration entity exists.
+   * Helper function to check whether a PublishingConfig entity exists.
+   *
+   * @param string|null $id
+   *   The id of the entity.
+   *
+   * @return bool
+   *   Return TRUE if the entity exist, FALSE if not.
    */
-  public function exist($id) {
+  public function exist(?string $id): bool {
     $entity = $this->entityTypeManager->getStorage('publishing_config')->getQuery()
       ->condition('id', $id)
       ->execute();

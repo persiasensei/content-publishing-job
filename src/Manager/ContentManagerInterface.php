@@ -13,9 +13,9 @@ interface ContentManagerInterface {
    * To get expired events ids.
    *
    * @param string $content_type
-   *    The name of the content type.
+   *   The name of the content type.
    * @param string $date_field
-   *     The name of the date field.
+   *   The name of the date field.
    *
    * @return array|int
    *   Return an array of ids.
