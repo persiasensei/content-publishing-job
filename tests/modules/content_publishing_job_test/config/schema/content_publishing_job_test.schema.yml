@@ -1,0 +1,16 @@
+content_publishing_job.publishing_config.test_event_job:
+  type: config_entity
+  label: 'Publishing configuration for contents'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    content_type:
+      type: string
+      label: 'Name of the content type'
+    date_field:
+      type: string
+      label: 'Name of the date field'

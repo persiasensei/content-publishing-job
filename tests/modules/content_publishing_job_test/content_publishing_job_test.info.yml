@@ -1,0 +1,7 @@
+name: 'Content Publishing Job Test'
+type: module
+description: 'Support for Content Publishing Job testing.'
+package: 'Content Publishing Testing'
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:content_publishing_job
