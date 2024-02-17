@@ -74,7 +74,7 @@ class ContentPublishingJobEntityTest extends ContentPublishingJobTestBase {
   }
 
   /**
-   * Tests the unavailabity of a deleted publishing_config entity pages.
+   * Tests the unavailability of a deleted publishing_config entity pages.
    */
   public function testContentPublishingConfigRemoveEntity() {
     $this->drupalLogin($this->adminUser);
